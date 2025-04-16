@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: pvz_postgres
+    environment:
+      POSTGRES_DB: pvz_db
+      POSTGRES_USER: pvz_user
+      POSTGRES_PASSWORD: pvz_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  # Пример Go-сервиса, если потребуется
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: pvz_user
+      DB_PASSWORD: pvz_password
+      DB_NAME: pvz_db
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+
+networks:
+  backend:
