@@ -14,9 +14,7 @@ type productService struct {
 }
 
 func NewProductService(productRepo repository.ProductRepository, receptionRepo repository.ReceptionRepository) *productService {
-	return &productService{productRepo: productRepo,
-		receptionRepo: receptionRepo,
-	}
+	return &productService{productRepo: productRepo, receptionRepo: receptionRepo}
 }
 
 type ProductService interface {

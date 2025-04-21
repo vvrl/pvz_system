@@ -3,10 +3,12 @@ package app
 import (
 	"fmt"
 	"log"
+	"pvz_system/internal/handlers"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/labstack/echo/v4"
 	"github.com/pressly/goose/v3"
 )
 
@@ -53,5 +55,15 @@ func (a *App) Run() {
 	if err := goose.Up(db, a.config.Migrations.Dir); err != nil {
 		log.Fatalf("Ошибка миграций: %v", err)
 	}
+
+	e := echo.New()
+
+	handlers.NewRouters(e, db)
+
+	if err := e.Start(a.config.Server.Port); err != nil {
+		log.Fatalf("Ошибка при запуске сервера: %v", err)
+	}
+
+	// СОЗДАНИЕ ЭНДПОИНТОВ И ЗАПУСК СЕРВЕРА
 
 }

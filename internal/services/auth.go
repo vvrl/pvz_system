@@ -11,7 +11,7 @@ import (
 )
 
 type AuthService struct {
-	secretKey     string
+	secretKey     string `envconfig:"KEY"`
 	tokenDuration time.Duration
 	userRepo      repository.UserRepository
 }

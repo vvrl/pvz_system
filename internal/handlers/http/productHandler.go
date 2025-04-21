@@ -1,20 +1,25 @@
 package http
 
 import (
+	"database/sql"
 	"net/http"
 	"pvz_system/internal/models"
+	"pvz_system/internal/repository"
 	"pvz_system/internal/services"
 	"strconv"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type ProductHandler struct {
 	productService services.ProductService
 }
 
-func NewProductHandler(productService services.ProductService) *ProductHandler {
-	return &ProductHandler{productService: productService}
+func NewProductHandler(db *sql.DB) *ProductHandler {
+	repo := repository.NewProductRepository(db)
+	receptonRepo := repository.NewReceptionRepository(db)
+	service := services.NewProductService(repo, receptonRepo)
+	return &ProductHandler{productService: service}
 }
 
 type AddProductRequest struct {

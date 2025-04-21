@@ -11,15 +11,11 @@ import (
 
 type receptionService struct {
 	receptionRepo repository.ReceptionRepository
-	productRepo   repository.ProductRepository
 	pvzRepo       repository.PvzRepository
 }
 
 func NewReceptiontService(receiptRepo repository.ReceptionRepository, pvzRepo repository.PvzRepository) *receptionService {
-	return &receptionService{
-		receptionRepo: receiptRepo,
-		pvzRepo:       pvzRepo,
-	}
+	return &receptionService{receptionRepo: receiptRepo, pvzRepo: pvzRepo}
 }
 
 type ReceptionService interface {

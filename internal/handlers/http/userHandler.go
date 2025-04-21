@@ -1,19 +1,25 @@
 package http
 
 import (
+	"database/sql"
 	"net/http"
 	"pvz_system/internal/models"
+	"pvz_system/internal/repository"
 	"pvz_system/internal/services"
+	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-	authService services.AuthService
+	AuthService services.AuthService
 }
 
-func NewUserHandler(authService services.AuthService) *UserHandler {
-	return &UserHandler{authService: authService}
+func NewUserHandler(db *sql.DB) *UserHandler {
+	repo := repository.NewUserRepository(db)
+	service := services.NewAuthService("KEY", time.Hour*24, repo)
+
+	return &UserHandler{AuthService: *service}
 }
 
 type RegisterRequest struct {
@@ -41,7 +47,7 @@ func (h *UserHandler) Register(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Неверный формат запроса"})
 	}
 
-	token, err := h.authService.Register(req.Email, req.Password, req.Role)
+	token, err := h.AuthService.Register(req.Email, req.Password, req.Role)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
@@ -55,7 +61,7 @@ func (h *UserHandler) Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": "Неверный формат запроса"})
 	}
 
-	token, err := h.authService.Login(req.Email, req.Password)
+	token, err := h.AuthService.Login(req.Email, req.Password)
 	if err != nil {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 	}
@@ -70,7 +76,7 @@ func (h *UserHandler) DummyLogin(c echo.Context) error {
 	}
 
 	role := models.UserRole(req.Role)
-	token, err := h.authService.DummyLogin(c.Request().Context(), role)
+	token, err := h.AuthService.DummyLogin(c.Request().Context(), role)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"message": err.Error()})
 	}
