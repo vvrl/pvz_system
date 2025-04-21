@@ -42,11 +42,6 @@ func NewApp() (*App, error) {
 }
 
 func (a *App) Run() {
-	// conn, err := pgx.Connect(context.Background(), a.config.Database.Dsn)
-	// if err != nil {
-	// 	log.Fatalf("ошибка подключения к БД: %v", err)
-	// }
-	// defer conn.Close(context.Background())
 
 	config, err := pgx.ParseConfig(a.config.Database.Dsn)
 	if err != nil {
