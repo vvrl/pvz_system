@@ -20,6 +20,7 @@ func NewPVZService(pvzRepo repository.PvzRepository) *pvzService {
 type PVZService interface {
 	CreatePVZ(ctx context.Context, city string) (*models.PVZ, error)
 	GetPVZ(ctx context.Context, id int) (*models.PVZ, error)
+	ListPVZs(ctx context.Context, startDate, endDate time.Time, page, pageSize int) ([]models.PVZ, error)
 }
 
 func (s *pvzService) CreatePVZ(ctx context.Context, city string) (*models.PVZ, error) {
@@ -54,16 +55,16 @@ func (s *pvzService) GetPVZ(ctx context.Context, id int) (*models.PVZ, error) {
 	return pvz, nil
 }
 
-func (s *pvzService) ListPVZs(ctx context.Context, fromTime, toTime time.Time, page, pageSize int) ([]models.PVZ, error) {
+func (s *pvzService) ListPVZs(ctx context.Context, startDate, endDate time.Time, page, pageSize int) ([]models.PVZ, error) {
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 {
+	if pageSize < 1 || pageSize > 30 {
 		pageSize = 10 // Устанавливаем разумный лимит по умолчанию
 	}
 
 	// Проверка временного диапазона
-	if fromTime.After(toTime) {
+	if startDate.After(endDate) {
 		return nil, errors.New("некорректный временной диапазон")
 	}
 
@@ -71,7 +72,7 @@ func (s *pvzService) ListPVZs(ctx context.Context, fromTime, toTime time.Time, p
 	offset := (page - 1) * pageSize
 
 	// Вызываем репозиторий
-	pvzs, err := s.pvzRepo.ListPVZs(ctx, fromTime, toTime, pageSize, offset)
+	pvzs, err := s.pvzRepo.ListPVZs(ctx, startDate, endDate, pageSize, offset)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при получении списка ПВЗ: %w", err)
 	}

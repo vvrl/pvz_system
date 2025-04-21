@@ -1,39 +1,93 @@
 package middleware
 
 import (
-	"context"
+	"errors"
 	"net/http"
-	"pvz_system/internal/services"
 	"strings"
+
+	"pvz_system/internal/services"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/labstack/echo/v4"
 )
 
-func AuthMiddleware(authService *services.AuthService) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tokenString := extractToken(r)
-			if tokenString == "" {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
+const (
+	authHeader   = "Authorization"
+	bearerPrefix = "Bearer "
+)
+
+// JWTClaims - кастомные claims для нашего JWT токена
+type JWTClaims struct {
+	UserID string `json:"user_id"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+type ErrorResponse struct {
+	Message string      `json:"message"`           // Сообщение об ошибке
+	Code    string      `json:"code,omitempty"`    // Опциональный код ошибки (для классификации)
+	Details interface{} `json:"details,omitempty"` // Дополнительные детали ошибки
+}
+
+func JWTMiddleware(authService services.AuthService) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// извлекаем токен из заголовка
+			tokenString, err := extractToken(c.Request())
+			if err != nil {
+				return c.JSON(http.StatusUnauthorized, ErrorResponse{Message: err.Error()})
 			}
 
+			// валидируем токен
 			claims, err := authService.ValidateToken(tokenString)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnauthorized)
-				return
+				return c.JSON(http.StatusUnauthorized, ErrorResponse{Message: "Invalid token"})
 			}
 
-			ctx := context.WithValue(r.Context(), "user_id", claims.UserID)
-			ctx = context.WithValue(ctx, "user_role", claims.Role)
+			// добавляем claims в контекст
+			c.Set("user_id", claims.UserID)
+			c.Set("user_role", claims.Role)
 
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
+			return next(c)
+		}
 	}
 }
 
-func extractToken(r *http.Request) string {
-	bearerToken := r.Header.Get("Authorization")
-	if len(bearerToken) > 7 && strings.ToUpper(bearerToken[0:6]) == "BEARER " {
-		return bearerToken[7:]
+func extractToken(r *http.Request) (string, error) {
+	authHeader := r.Header.Get(authHeader)
+	if authHeader == "" {
+		return "", errors.New("требуется заголовок авторизации")
 	}
-	return ""
+
+	if !strings.HasPrefix(authHeader, bearerPrefix) {
+		return "", errors.New("формат заголовка авторизации должен быть 'Bearer {token}'")
+	}
+
+	return authHeader[len(bearerPrefix):], nil
+}
+
+func AdminOnlyMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		role := c.Get("user_role").(string)
+		if role != "moderator" {
+			return c.JSON(http.StatusForbidden, ErrorResponse{
+				Message: "Доступ запрещен. Требуются права модератора",
+				Code:    "forbidden",
+			})
+		}
+		return next(c)
+	}
+}
+
+func EmployeeOnlyMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		role := c.Get("user_role").(string)
+		if role != "employee" {
+			return c.JSON(http.StatusForbidden, ErrorResponse{
+				Message: "Доступ запрещен. Необходимые права сотрудников",
+				Code:    "forbidden",
+			})
+		}
+		return next(c)
+	}
 }

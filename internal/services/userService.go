@@ -47,6 +47,17 @@ func (s *AuthService) Login(email, password string) (string, error) {
 	return s.generateToken(user.ID, string(user.Role))
 }
 
+func (s *AuthService) DummyLogin(ctx context.Context, role models.UserRole) (string, error) {
+	// Для dummyLogin генерируем токен с фиктивным UserID 0
+	switch role {
+	case models.RoleEmployee, models.RoleModerator:
+		// OK
+	default:
+		return "", errors.New("несуществующая роль")
+	}
+	return s.generateToken(0, string(role))
+}
+
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err

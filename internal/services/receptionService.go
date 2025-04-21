@@ -15,10 +15,9 @@ type receptionService struct {
 	pvzRepo       repository.PvzRepository
 }
 
-func NewReceiptService(receiptRepo repository.ReceptionRepository, itemRepo repository.ProductRepository, pvzRepo repository.PvzRepository) *receptionService {
+func NewReceptiontService(receiptRepo repository.ReceptionRepository, pvzRepo repository.PvzRepository) *receptionService {
 	return &receptionService{
 		receptionRepo: receiptRepo,
-		productRepo:   itemRepo,
 		pvzRepo:       pvzRepo,
 	}
 }

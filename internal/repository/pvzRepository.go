@@ -47,7 +47,7 @@ func (r *PVZRepo) GetPVZByID(ctx context.Context, id int) (*models.PVZ, error) {
 	return &pvz, nil
 }
 
-func (r *PVZRepo) ListPVZs(ctx context.Context, fromTime, toTime time.Time, limit, offset int) ([]models.PVZ, error) {
+func (r *PVZRepo) ListPVZs(ctx context.Context, startDate, endDate time.Time, limit, offset int) ([]models.PVZ, error) {
 	query := `
         SELECT pvz.id, pvz.city, pvz.registrationDate,
             r.id, r.dateTime, r.pvzId, r.status,
@@ -57,7 +57,7 @@ func (r *PVZRepo) ListPVZs(ctx context.Context, fromTime, toTime time.Time, limi
         ORDER BY pvz.id, r.dateTime
 		LIMIT $3 OFFSET $4
     `
-	rows, err := r.db.QueryContext(ctx, query, fromTime, toTime, limit, offset)
+	rows, err := r.db.QueryContext(ctx, query, startDate, endDate, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка при запросе списка пвз: %w", err)
 	}
