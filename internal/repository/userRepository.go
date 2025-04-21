@@ -8,8 +8,9 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, user *models.User) (*models.User, error)
+	CreateUser(ctx context.Context, email, password string, role models.UserRole) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	GetUserById(ctx context.Context, id int) (*models.User, error)
 }
 
 type userRepo struct {
@@ -20,14 +21,19 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &userRepo{db}
 }
 
-func (r *userRepo) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
+func (r *userRepo) CreateUser(ctx context.Context, email, password string, role models.UserRole) (*models.User, error) {
 	query := "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id"
-	err := r.db.QueryRowContext(ctx, query, user.Email, user.Password, user.Role).Scan(&user.ID)
+	var id int
+	err := r.db.QueryRowContext(ctx, query, email, password, role).Scan(&id)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка создания пользователя: %w", err)
 	}
 
-	return user, err
+	return &models.User{
+		ID:    id,
+		Email: email,
+		Role:  role,
+	}, err
 }
 
 func (r *userRepo) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -36,7 +42,19 @@ func (r *userRepo) GetUserByEmail(ctx context.Context, email string) (*models.Us
 	var user models.User
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password, &user.Role)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка вывода пользователя: %w", err)
+		return nil, fmt.Errorf("ошибка вывода пользователя по почте: %w", err)
+	}
+
+	return &user, nil
+}
+
+func (r *userRepo) GetUserById(ctx context.Context, id int) (*models.User, error) {
+	query := "SELECT id, email, password, role FROM users WHERE id = $1"
+
+	var user models.User
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.ID, &user.Email, &user.Password, &user.Role)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка вывода пользователя по id: %w", err)
 	}
 
 	return &user, nil

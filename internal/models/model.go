@@ -3,10 +3,10 @@ package models
 import "time"
 
 type User struct {
-	ID       int    `json:"id"`
-	Email    string `json:"email"`
-	Password string `json:"-"`
-	Role     string `json:"role"`
+	ID       int      `json:"id"`
+	Email    string   `json:"email"`
+	Password string   `json:"-"`
+	Role     UserRole `json:"role"`
 }
 
 // user role types
@@ -40,10 +40,10 @@ const (
 )
 
 type Product struct {
-	ID          int       `json:"id"`
-	DateTime    time.Time `json:"dateTime"`
-	Type        string    `json:"type"`
-	ReceptionID int       `json:"receptionId"`
+	ID          int         `json:"id"`
+	DateTime    time.Time   `json:"dateTime"`
+	Type        ProductType `json:"type"`
+	ReceptionID int         `json:"receptionId"`
 }
 
 //product types
