@@ -10,7 +10,7 @@ RUN go mod download
 COPY ./ ./
 
 # Открываем порт
-EXPOSE 8080
+# EXPOSE 8080
 
 # Команда по умолчанию при запуске контейнера
 CMD ["go", "run", "./cmd/pvzSystem"]

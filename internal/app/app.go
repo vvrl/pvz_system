@@ -60,9 +60,7 @@ func (a *App) Run() {
 
 	handlers.NewRouters(e, db)
 
-	if err := e.Start(a.config.Server.Port); err != nil {
-		log.Fatalf("Ошибка при запуске сервера: %v", err)
-	}
+	e.Logger.Fatal(e.Start(a.config.Server.Port))
 
 	// СОЗДАНИЕ ЭНДПОИНТОВ И ЗАПУСК СЕРВЕРА
 

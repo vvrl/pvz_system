@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"net/http"
 	httpHandler "pvz_system/internal/handlers/http"
 	middle "pvz_system/internal/middleware"
 
@@ -17,6 +18,9 @@ func NewRouters(e *echo.Echo, db *sql.DB) {
 
 	jwtMiddleware := middle.JWTMiddleware(authHandler.AuthService)
 
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello")
+	})
 	// Публичные маршруты
 	e.POST("/register", authHandler.Register)
 	e.POST("/login", authHandler.Login)
